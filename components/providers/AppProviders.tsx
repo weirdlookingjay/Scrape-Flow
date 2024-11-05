@@ -16,7 +16,7 @@ export const AppProviders = ({ children }: Props) => {
       <ThemeProvider defaultTheme='system' enableSystem attribute='class'>
         {children}
       </ThemeProvider>
-      <ReactQueryDevtools />
+      {/* <ReactQueryDevtools /> */}
     </QueryClientProvider>
   )
 }
