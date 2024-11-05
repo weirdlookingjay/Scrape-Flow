@@ -15,7 +15,9 @@ import {
 
 import "@xyflow/react/dist/style.css";
 import NodeComponent from "./nodes/NodeComponent";
-import { useEffect } from "react";
+import { useCallback, useEffect } from "react";
+import { AppNode } from "@/types/appNode";
+import { set } from "date-fns";
 
 interface Props {
     workflow: Workflow;
@@ -29,7 +31,7 @@ const snapGrid: [number, number] = [50, 50]
 const fitViewOptions = { padding: 1 }
 
 function FlowEditor({ workflow }: Props) {
-    const [nodes, setNodes, onNodesChange] = useNodesState([]);
+    const [nodes, setNodes, onNodesChange] = useNodesState<AppNode>([]);
     const [edges, setEdges, onEdgesChange] = useEdgesState([]);
     const { setViewport } = useReactFlow()
 
@@ -51,6 +53,20 @@ function FlowEditor({ workflow }: Props) {
     }, [setNodes, setEdges, workflow.definitions, setViewport]);
 
 
+    const onDragOver = useCallback((event: React.DragEvent) => {
+        event.preventDefault();
+        event.dataTransfer.dropEffect = "move";
+    }, [])
+
+    const onDrop = useCallback((event: React.DragEvent) => {
+        event.preventDefault();
+        const taskType = event.dataTransfer.getData("application/reactflow");
+        if (typeof taskType === undefined || !taskType) return;
+
+        const newNode = CreateFlowNode(taskType as TaskType);
+        setNodes((nds) => nds.concat(newNode));
+    }, [setNodes])
+
     return (
         <main className="h-full w-full">
             <ReactFlow
@@ -63,6 +79,8 @@ function FlowEditor({ workflow }: Props) {
                 snapGrid={snapGrid}
                 fitViewOptions={fitViewOptions}
                 fitView
+                onDragOver={onDragOver}
+                onDrop={onDrop}
             >
                 <Controls position="top-left" fitViewOptions={fitViewOptions} />
                 <Background variant={BackgroundVariant.Dots} gap={12} size={1} />
