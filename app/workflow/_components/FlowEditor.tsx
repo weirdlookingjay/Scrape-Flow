@@ -20,6 +20,7 @@ import "@xyflow/react/dist/style.css";
 import NodeComponent from "./nodes/NodeComponent";
 import { useCallback, useEffect } from "react";
 import { AppNode } from "@/types/appNode";
+import DeleteableEdge from "./edges/DeleteableEdge";
 
 
 interface Props {
@@ -28,6 +29,10 @@ interface Props {
 
 const nodeTypes = {
     FlowScrapeNode: NodeComponent,
+};
+
+const edgeTypes = {
+    default: DeleteableEdge,
 };
 
 const snapGrid: [number, number] = [50, 50]
@@ -87,6 +92,7 @@ function FlowEditor({ workflow }: Props) {
                 onEdgesChange={onEdgesChange}
                 onNodesChange={onNodesChange}
                 nodeTypes={nodeTypes}
+                edgeTypes={edgeTypes}
                 snapToGrid
                 snapGrid={snapGrid}
                 fitViewOptions={fitViewOptions}
