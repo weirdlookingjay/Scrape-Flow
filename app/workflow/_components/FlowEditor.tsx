@@ -21,6 +21,7 @@ import NodeComponent from "./nodes/NodeComponent";
 import { useCallback, useEffect } from "react";
 import { AppNode } from "@/types/appNode";
 import DeleteableEdge from "./edges/DeleteableEdge";
+import { TaskRegistry } from "@/lib/workflow/task/registry";
 
 
 interface Props {
@@ -96,6 +97,34 @@ function FlowEditor({ workflow }: Props) {
         })
     }, [nodes, setEdges, updateNodeData])
 
+    const isValidConnection = useCallback((connection: Edge | Connection) => {
+        // No select-connection allowed
+        if (connection.sourceHandle === connection.target) {
+            return false
+        }
+
+        // Same taskParam type connection
+        const source = nodes.find((node) => node.id == connection.source)
+        const target = nodes.find((node) => node.id == connection.target)
+        if (!source || !target) {
+            console.error("Invalid connection: source or target not found")
+            return false;
+        }
+
+        const sourceTask = TaskRegistry[source.data.type]
+        const targetTask = TaskRegistry[target.data.type]
+
+        const output = sourceTask.outputs.find((o) => o.name === connection.sourceHandle)
+        const input = targetTask.inputs.find((i) => i.name === connection.targetHandle)
+
+        if (input?.type !== output?.type) {
+            console.error("Invalid connection: type mismatch")
+            return false;
+        }
+        console.log("@@DEBUG", { input, output })
+        return true;
+    }, [nodes])
+
     return (
         <main className="h-full w-full">
             <ReactFlow
@@ -112,6 +141,7 @@ function FlowEditor({ workflow }: Props) {
                 onDragOver={onDragOver}
                 onDrop={onDrop}
                 onConnect={onConnect}
+                isValidConnection={isValidConnection}
             >
                 <Controls position="top-left" fitViewOptions={fitViewOptions} />
                 <Background variant={BackgroundVariant.Dots} gap={12} size={1} />
