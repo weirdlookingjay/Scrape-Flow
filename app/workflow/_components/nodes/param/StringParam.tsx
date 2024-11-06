@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { ParamProps } from "@/types/appNode";
 import React, { useEffect, useId, useState } from "react";
 
-function StringParam({ param, value, updateNodeParamValue }: ParamProps) {
+function StringParam({ param, value, updateNodeParamValue, disabled }: ParamProps) {
     const [internalValue, setInternalValue] = useState(value);
     const id = useId();
 
@@ -27,10 +27,11 @@ function StringParam({ param, value, updateNodeParamValue }: ParamProps) {
             </Label>
             <Component
                 id={id}
+                disabled={disabled}
                 value={internalValue}
                 placeholder="Enter value here"
-                onChange={(e) => setInternalValue(e.target.value)}
-                onBlur={(e) => updateNodeParamValue(e.target.value)}
+                onChange={(e: any) => setInternalValue(e.target.value)}
+                onBlur={(e: any) => updateNodeParamValue(e.target.value)}
                 className="text-xs"
             />
             {param.helperText && (
