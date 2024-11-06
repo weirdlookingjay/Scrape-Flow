@@ -17,7 +17,7 @@ import "@xyflow/react/dist/style.css";
 import NodeComponent from "./nodes/NodeComponent";
 import { useCallback, useEffect } from "react";
 import { AppNode } from "@/types/appNode";
-import { set } from "date-fns";
+
 
 interface Props {
     workflow: Workflow;
@@ -33,7 +33,7 @@ const fitViewOptions = { padding: 1 }
 function FlowEditor({ workflow }: Props) {
     const [nodes, setNodes, onNodesChange] = useNodesState<AppNode>([]);
     const [edges, setEdges, onEdgesChange] = useEdgesState([]);
-    const { setViewport } = useReactFlow()
+    const { setViewport, screenToFlowPosition } = useReactFlow()
 
     useEffect(() => {
         try {
@@ -63,9 +63,14 @@ function FlowEditor({ workflow }: Props) {
         const taskType = event.dataTransfer.getData("application/reactflow");
         if (typeof taskType === undefined || !taskType) return;
 
-        const newNode = CreateFlowNode(taskType as TaskType);
+        const postion = screenToFlowPosition({
+            x: event.clientX,
+            y: event.clientY
+        })
+
+        const newNode = CreateFlowNode(taskType as TaskType, postion);
         setNodes((nds) => nds.concat(newNode));
-    }, [setNodes])
+    }, [setNodes, screenToFlowPosition])
 
     return (
         <main className="h-full w-full">
