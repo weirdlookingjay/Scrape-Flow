@@ -1,4 +1,4 @@
-import { AppNode } from "@/types/appNode";
+import { AppNode, AppNodeMissingInputs } from "@/types/appNode";
 import {
     WorkflowExecutionPlan,
     WorkflowExecutionPlanPhase,
@@ -6,8 +6,17 @@ import {
 import { Edge, getIncomers } from "@xyflow/react";
 import { TaskRegistry } from "./task/registry";
 
+export enum FlowToExecutionPlanValidationError {
+    "NO_ENTRY_POINT",
+    "INVALID_INPUTS",
+}
+
 type FlowToExecutionPlanType = {
     executionPlan?: WorkflowExecutionPlan;
+    error?: {
+        type: FlowToExecutionPlanValidationError;
+        invalidElements?: AppNodeMissingInputs[];
+    }
 };
 
 export function FlowToExecutionPlan(
@@ -18,10 +27,24 @@ export function FlowToExecutionPlan(
         (node) => TaskRegistry[node.data.type].isEntryPoint
     );
     if (!entryPoint) {
-        throw new Error("TODO: HANDLE THIS ERROR");
+        return {
+            error: {
+                type: FlowToExecutionPlanValidationError.NO_ENTRY_POINT
+            }
+        }
     }
 
+    const inputWithErrors: AppNodeMissingInputs[] = [];
     const planned = new Set<string>();
+
+    const invalidInputs = getInvalidInputs(entryPoint, edges, planned);
+    if (invalidInputs.length > 0) {
+        inputWithErrors.push({
+            nodeId: entryPoint.id,
+            inputs: invalidInputs,
+        })
+    }
+
     const executionPlan: WorkflowExecutionPlan = [
         {
             phase: 1,
@@ -51,7 +74,12 @@ export function FlowToExecutionPlan(
                     // this means that this particular node has an invalid input
                     // which means the workflow is invalid
                     console.error("invalid inputs", currentNode.id, invalidInputs);
-                    throw new Error("TODO: HANDLE ERROR 1");
+                    if (invalidInputs.length > 0) {
+                        inputWithErrors.push({
+                            nodeId: currentNode.id,
+                            inputs: invalidInputs,
+                        })
+                    }
                 } else {
                     // let's skip this node fpr mow
                     continue;
@@ -66,6 +94,15 @@ export function FlowToExecutionPlan(
         }
 
         executionPlan.push(nextPhase);
+    }
+
+    if (inputWithErrors.length > 0) {
+        return {
+            error: {
+                type: FlowToExecutionPlanValidationError.INVALID_INPUTS,
+                invalidElements: inputWithErrors
+            }
+        }
     }
 
     return { executionPlan };
