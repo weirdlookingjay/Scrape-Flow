@@ -10,6 +10,7 @@ import {
     Connection,
     Controls,
     Edge,
+    getOutgoers,
     ReactFlow,
     useEdgesState,
     useNodesState,
@@ -121,9 +122,21 @@ function FlowEditor({ workflow }: Props) {
             console.error("Invalid connection: type mismatch")
             return false;
         }
-        console.log("@@DEBUG", { input, output })
-        return true;
-    }, [nodes])
+
+        const hasCycle = (node: AppNode, visited = new Set()) => {
+            if (visited.has(node.id)) return false;
+            visited.add(node.id);
+
+            for (const outgoer of getOutgoers(node, nodes, edges)) {
+                if (outgoer.id === connection.source) return true;
+                if (hasCycle(outgoer, visited)) return true;
+            }
+        }
+
+        const detectedCycle = hasCycle(target)
+
+        return !detectedCycle;
+    }, [nodes, edges])
 
     return (
         <main className="h-full w-full">
