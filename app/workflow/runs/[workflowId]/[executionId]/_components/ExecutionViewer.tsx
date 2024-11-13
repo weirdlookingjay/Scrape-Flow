@@ -183,7 +183,7 @@ export default function ExecutionViewer({
                                 <div className="flex gap-1 items-center">
                                     <Coins size={18} className="stroke-muted-foreground" />
                                     <span>Credits</span>
-                                    <span>TODO</span>
+                                    <span>{phaseDetails.data.creditsConsumed}</span>
                                 </div>
                             </Badge>
                             <Badge variant={"outline"} className="space-x-4">
