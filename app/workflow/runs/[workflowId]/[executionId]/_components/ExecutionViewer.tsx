@@ -25,7 +25,10 @@ import { DatesToDruationString } from "@/lib/helper/dates";
 import { GetPhasesTotalCost } from "@/lib/helper/phases";
 import { cn } from "@/lib/utils";
 import { LogLevel } from "@/types/log";
-import { ExecutionPhaseStatus, WorkflowExecutionStatus } from "@/types/workflow";
+import {
+    ExecutionPhaseStatus,
+    WorkflowExecutionStatus,
+} from "@/types/workflow";
 import { ExecutionLog } from "@prisma/client";
 import { useQuery } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
@@ -41,6 +44,7 @@ import {
 } from "lucide-react";
 import { ReactNode, useEffect, useState } from "react";
 import PhaseStatusBadge from "./PhaseStatusBadge";
+import ReactCountUpWrapper from "@/components/ReactCountUpWrapper";
 
 type ExecutionDate = Awaited<ReturnType<typeof GetWorkflowExecutionWithPhases>>;
 
@@ -72,14 +76,18 @@ export default function ExecutionViewer({
         const phases = query.data?.phases || [];
         if (isRunning) {
             // Select the last executed phase
-            const phaseToSelect = phases.toSorted((a, b) => a.startedAt! > b.startedAt! ? -1 : 1)[0];
+            const phaseToSelect = phases.toSorted((a, b) =>
+                a.startedAt! > b.startedAt! ? -1 : 1
+            )[0];
 
             setSelectedPhase(phaseToSelect.id);
             return;
         }
-        const phaseToSelect = phases.toSorted((a, b) => a.completedAt! > b.completedAt! ? -1 : 1)[0];
+        const phaseToSelect = phases.toSorted((a, b) =>
+            a.completedAt! > b.completedAt! ? -1 : 1
+        )[0];
         setSelectedPhase(phaseToSelect.id);
-    }, [query.data?.phases, isRunning, setSelectedPhase])
+    }, [query.data?.phases, isRunning, setSelectedPhase]);
 
     const duration = DatesToDruationString(
         query.data?.completedAt,
@@ -96,7 +104,14 @@ export default function ExecutionViewer({
                     <ExecutionLabel
                         icon={CircleDashedIcon}
                         label="Status"
-                        value={query.data?.status}
+                        value={
+                            <div className="font-semibold capitalize flex gap-2 items-center">
+                                <PhaseStatusBadge
+                                    status={query.data?.status as ExecutionPhaseStatus}
+                                />
+                                <span>{query.data?.status}</span>
+                            </div>
+                        }
                     />
 
                     {/* Started at label */}
@@ -129,7 +144,7 @@ export default function ExecutionViewer({
                     <ExecutionLabel
                         icon={CoinsIcon}
                         label="Credits Consumed"
-                        value={creditsConsumed}
+                        value={<ReactCountUpWrapper value={creditsConsumed} />}
                     />
                 </div>
                 <Separator />
@@ -319,15 +334,14 @@ function LogViewer({ logs }: { logs: ExecutionLog[] | undefined }) {
                                     width={80}
                                     className={cn(
                                         "uppercase text-xs font-bold p-[3px] pl-4",
-                                        (log.logLevel as LogLevel) === "error" && "text-destructive",
-                                        (log.logLevel as LogLevel) === "info" && "text-primary",
+                                        (log.logLevel as LogLevel) === "error" &&
+                                        "text-destructive",
+                                        (log.logLevel as LogLevel) === "info" && "text-primary"
                                     )}
                                 >
                                     {log.logLevel}
                                 </TableCell>
-                                <TableCell
-                                    className="text-sm flex-1 p-[3px] pl-4"
-                                >
+                                <TableCell className="text-sm flex-1 p-[3px] pl-4">
                                     {log.message}
                                 </TableCell>
                             </TableRow>
